@@ -1,0 +1,35 @@
+/* @hooksvue/big-screen — 基础样式
+ * 所有 class 统一使用 hbs- 前缀（hooksvue-big-screen）避免污染。
+ * 该文件可独立 import：
+ *   import '@hooksvue/big-screen/style.css';
+ */
+
+/* 容器组件模式：外层占满父级，内层由 JS 控制 transform */
+.hbs-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.hbs-content {
+  /* width / height / transform 由 ScreenResizer 在运行时写入；
+     这里仅声明定位与边距，避免被外部样式继承 margin/padding 影响居中计算。 */
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0;
+  padding: 0;
+  transform-origin: 0 0;
+}
+
+/* 全局插件模式辅助：当用户通过 createBigScreen 接管 #app 时，
+   建议在自己的全局样式中加上这两条。这里以 :where 兜底避免特异性污染。 */
+:where(html, body) {
+  margin: 0;
+  padding: 0;
+}
+
+:where(body) {
+  overflow: hidden;
+}

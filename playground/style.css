@@ -1,0 +1,152 @@
+/* playground 自身样式（与库 CSS 隔离） */
+* { box-sizing: border-box; }
+html, body, #app { width: 100%; height: 100%; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; background: #111; color: #eee; }
+
+.pg-toolbar {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 9999;
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(20, 20, 30, 0.85);
+  border: 1px solid #2a2a3a;
+  border-radius: 8px;
+  backdrop-filter: blur(6px);
+}
+.pg-toolbar button {
+  background: #2a2a3a;
+  color: #eee;
+  border: 1px solid #3a3a4a;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.pg-toolbar button.active {
+  background: #4f8cff;
+  border-color: #4f8cff;
+}
+.pg-toolbar .info {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 12px;
+  color: #aaa;
+  font-family: monospace;
+}
+.pg-toolbar .info b { color: #4f8cff; }
+.pg-toolbar .hint {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 12px;
+  color: #ffa940;
+}
+
+/* 大屏内部演示元素：按 1920×1080 设计稿绝对定位 */
+.demo-canvas {
+  position: relative;
+  width: 1920px;
+  height: 1080px;
+  background: linear-gradient(135deg, #0a1230 0%, #1a0a30 100%);
+  color: #fff;
+  font-family: monospace;
+}
+.demo-canvas .grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 80px 80px;
+}
+.demo-canvas .title {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 56px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #4f8cff;
+  text-shadow: 0 0 24px rgba(79, 140, 255, 0.6);
+}
+.demo-canvas .panel {
+  position: absolute;
+  background: rgba(79, 140, 255, 0.08);
+  border: 1px solid rgba(79, 140, 255, 0.4);
+  padding: 24px;
+  border-radius: 8px;
+}
+.demo-canvas .p1 { left: 60px; top: 160px; width: 580px; height: 360px; }
+.demo-canvas .p2 { right: 60px; top: 160px; width: 580px; height: 360px; }
+.demo-canvas .p3 { left: 50%; top: 560px; transform: translateX(-50%); width: 1200px; height: 460px; }
+.demo-canvas .panel h3 { margin: 0 0 12px; font-size: 24px; color: #4f8cff; }
+.demo-canvas .panel p { margin: 6px 0; font-size: 16px; color: #ccc; }
+.demo-canvas .marker {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background: #ff5470;
+  border-radius: 50%;
+  box-shadow: 0 0 16px rgba(255, 84, 112, 0.8);
+}
+.demo-canvas .corner-tl { left: 0; top: 0; }
+.demo-canvas .corner-tr { right: 0; top: 0; }
+.demo-canvas .corner-bl { left: 0; bottom: 0; }
+.demo-canvas .corner-br { right: 0; bottom: 0; }
+
+/* 容器模式外层壳 */
+.container-shell {
+  position: absolute;
+  inset: 0;
+  padding: 80px 24px 24px;
+}
+.container-shell .holder {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: 2px dashed #4f8cff;
+  border-radius: 8px;
+  overflow: hidden;
+  /* 关键：使容器可拖拽缩放（右下角原生 grip） */
+  resize: both;
+  min-width: 320px;
+  min-height: 240px;
+  max-width: 100%;
+  max-height: 100%;
+}
+/* 自定义右下角 grip 视觉提示（原生 grip 太小） */
+.container-shell .holder::after {
+  content: '';
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 18px;
+  height: 18px;
+  background:
+    linear-gradient(135deg, transparent 50%, #4f8cff 50%, #4f8cff 60%, transparent 60%, transparent 70%, #4f8cff 70%, #4f8cff 80%, transparent 80%);
+  pointer-events: none;
+  opacity: 0.7;
+  border-bottom-right-radius: 6px;
+}
+/* 左上角实时尺寸标签 */
+.holder-size-tag {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 10;
+  padding: 3px 8px;
+  background: rgba(20, 20, 30, 0.85);
+  border: 1px solid rgba(79, 140, 255, 0.5);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 11px;
+  color: #4f8cff;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+}
+.holder-size-tag b { color: #00e5ff; font-weight: 600; }

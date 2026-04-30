@@ -1,0 +1,98 @@
+/* @hooksvue/big-screen — Pure CSS Adaptation
+ * ----------------------------------------------------------------
+ * 纯 CSS 大屏自适应方案，零 JS / 零 ResizeObserver。
+ * 适用场景：内容静态、不需要响应式监听父容器布局变化的简单大屏。
+ *
+ * 浏览器要求（用到了 tan/atan2 三角函数与 @property）：
+ *   Chrome  111+  /  Safari  15.4+  /  Firefox 108+
+ *
+ * 使用方式：
+ *   <link rel="stylesheet" href="@hooksvue/big-screen/css-only.css" />
+ *
+ *   <!-- A. 全屏模式（vw/vh 基准）-->
+ *   <div class="hbs-css-viewport" style="--hbs-w:1920;--hbs-h:1080;">
+ *     <div class="hbs-css-content">… 设计稿尺寸的内容 …</div>
+ *   </div>
+ *
+ *   <!-- B. 容器模式（基于父容器尺寸）-->
+ *   <div class="hbs-css-container" style="--hbs-w:1920;--hbs-h:1080;">
+ *     <div class="hbs-css-content">…</div>
+ *   </div>
+ *
+ *   <!-- 切换缩放模式：默认 fit；其他在 .hbs-css-content 上加修饰类 -->
+ *   <div class="hbs-css-content hbs-mode-stretch">…</div>
+ *   <div class="hbs-css-content hbs-mode-fill-width">…</div>
+ *   <div class="hbs-css-content hbs-mode-fill-height">…</div>
+ * ----------------------------------------------------------------
+ */
+
+/* 把长度比转换成 <number>，必须注册否则 min() 推导会失败 */
+@property --hbs-scale-x {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+@property --hbs-scale-y {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+
+/* ------ A. 全屏模式：基于 viewport ------ */
+.hbs-css-viewport {
+  --hbs-w: 1920;
+  --hbs-h: 1080;
+  --hbs-scale-x: tan(atan2(100vw, calc(var(--hbs-w) * 1px)));
+  --hbs-scale-y: tan(atan2(100vh, calc(var(--hbs-h) * 1px)));
+
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #000;
+}
+
+/* ------ B. 容器模式：基于父容器（container queries）------ */
+.hbs-css-container {
+  --hbs-w: 1920;
+  --hbs-h: 1080;
+  --hbs-scale-x: tan(atan2(100cqw, calc(var(--hbs-w) * 1px)));
+  --hbs-scale-y: tan(atan2(100cqh, calc(var(--hbs-h) * 1px)));
+
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #000;
+  container-type: size;
+}
+
+/* 内容层：固定为设计稿尺寸，再通过 transform 等比缩放 */
+.hbs-css-viewport > .hbs-css-content,
+.hbs-css-container > .hbs-css-content {
+  width: calc(var(--hbs-w) * 1px);
+  height: calc(var(--hbs-h) * 1px);
+  flex-shrink: 0;
+  /* fit 模式：取较小的缩放比，不变形、留黑边 */
+  transform: scale(min(var(--hbs-scale-x), var(--hbs-scale-y)));
+  transform-origin: center center;
+}
+
+/* ------ 缩放模式修饰类（叠加在 .hbs-css-content 上）------ */
+.hbs-css-content.hbs-mode-stretch {
+  /* 非等比拉伸 */
+  transform: scale(var(--hbs-scale-x), var(--hbs-scale-y));
+}
+.hbs-css-content.hbs-mode-fill-width {
+  /* 以宽度为基准撑满 */
+  transform: scale(var(--hbs-scale-x));
+}
+.hbs-css-content.hbs-mode-fill-height {
+  /* 以高度为基准撑满 */
+  transform: scale(var(--hbs-scale-y));
+}
