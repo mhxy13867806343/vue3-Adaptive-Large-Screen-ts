@@ -6,6 +6,43 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.1.1] — 2026-05-01
+
+### 🇨🇳 中文
+
+#### 新增
+- 新增 `v-scale` Vue 指令，支持直接挂载在 echarts 等元素上监听缩放。
+- `v-scale` 支持两种用法：
+  - `v-scale`：自动写入 `--hbs-adapt-scale / --hbs-adapt-scale-x / --hbs-adapt-scale-y` 并派发 `adapt-scale` 事件。
+  - `v-scale="handlerAdaptScale"`：缩放变化后回调 `handlerAdaptScale(el, scale, info)`。
+- `createBigScreen()` 默认全局注册 `v-scale`，并新增 `registerDirective` 配置用于关闭自动注册。
+- Playground 新增 `v-scale 指令`页签，提供真实 500×400 demo，可实时查看 `scale / scaleX / scaleY / rect`。
+- Playground 新增 `Props 数据`页签，展示 `:data=[]` 入参结构。
+- Dashboard 支持 `data` prop，数据项结构为 `{ name, value, format? }`，其中 `name` 与 `value` 必传，`format` 可选。
+- 新增 GitHub Pages 工作流，推送 `main` 后自动构建 playground 预览。
+
+#### 优化
+- `ScreenResizer.resize()` 完成后派发 `hbs-resize` 事件，便于 `v-scale` 在 transform 缩放变化时同步刷新。
+- README 补充 `v-scale` 使用方式与指令 API。
+- TypeScript 6 下补充 `ignoreDeprecations: "6.0"`，避免 `baseUrl` 弃用提示阻断类型检查。
+
+### 🇬🇧 English
+
+#### Added
+- Added the `v-scale` Vue directive for listening to effective element scale, useful for echarts containers.
+- `v-scale` supports both plain usage and a handler form: `v-scale="handlerAdaptScale"`.
+- `createBigScreen()` now registers `v-scale` by default, with `registerDirective` to opt out.
+- Playground now includes live `v-scale` and `Props data` tabs.
+- Dashboard now accepts a `data` prop with `{ name, value, format? }` items.
+- Added a GitHub Pages workflow to build and publish the playground preview from `main`.
+
+#### Changed
+- `ScreenResizer.resize()` now dispatches `hbs-resize` after scaling, allowing directive-based listeners to refresh.
+- README documents the new directive API.
+- TypeScript config silences the TS 6 `baseUrl` deprecation warning.
+
+---
+
 ## [0.1.0] — 2026-04-30
 
 ### 🇨🇳 中文

@@ -90,14 +90,17 @@ export class ScreenResizer {
     style.transformOrigin = '0 0';
     style.transform = `translate(${tx}px, ${ty}px) scale(${scaleX}, ${scaleY})`;
 
-    this.onResize?.({
+    const info: ScaleInfo = {
       scaleX,
       scaleY,
       width: this.width,
       height: this.height,
       parentWidth,
       parentHeight,
-    });
+    };
+
+    this.onResize?.(info);
+    window.dispatchEvent(new CustomEvent<ScaleInfo>('hbs-resize', { detail: info }));
   }
 
   /**

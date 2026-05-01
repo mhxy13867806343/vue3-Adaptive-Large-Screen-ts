@@ -9,7 +9,7 @@ useECharts(elRef, props.option);
 </script>
 
 <template>
-  <div ref="elRef" class="chart-box" />
+  <div ref="elRef" class="chart-box" v-scale />
 </template>
 
 <style scoped>

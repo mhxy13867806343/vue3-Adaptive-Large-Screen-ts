@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import DashHeader from './components/DashHeader.vue';
 import KpiCard from './components/KpiCard.vue';
 import Panel from './components/Panel.vue';
@@ -12,6 +13,33 @@ import {
   gaugeOption,
   horizontalBarOption,
 } from './charts/options';
+
+export interface DashboardDataItem {
+  name: string;
+  value: string | number;
+  format?: (value: string | number) => string | number;
+  unit?: string;
+  trend?: number;
+  color?: string;
+}
+
+const props = withDefaults(defineProps<{
+  data?: DashboardDataItem[];
+}>(), {
+  data: () => [
+    { name: '今日销售额', value: 1820400, unit: '￥', trend: 12.4, color: '#4f8cff', format: (v) => Number(v).toLocaleString() },
+    { name: '订单总数', value: 12480, unit: '单', trend: 8.7, color: '#00e5ff', format: (v) => Number(v).toLocaleString() },
+    { name: '活跃用户', value: 45230, unit: '人', trend: -1.3, color: '#36e8a8', format: (v) => Number(v).toLocaleString() },
+    { name: '转化率', value: 24.8, unit: '%', trend: 3.5, color: '#ffa940' },
+    { name: '平均客单', value: 146, unit: '￥', trend: 5.2, color: '#a26bff' },
+    { name: '退货率', value: 2.4, unit: '%', trend: -0.8, color: '#ff5470' },
+  ],
+});
+
+const kpiItems = computed(() => props.data.map((item) => ({
+  ...item,
+  displayValue: item.format ? item.format(item.value) : item.value,
+})));
 </script>
 
 <template>
@@ -21,12 +49,15 @@ import {
     <main class="dash-main">
       <!-- KPI 区 -->
       <section class="kpi-row">
-        <KpiCard label="今日销售额" :value="'1,820,400'" unit="￥" :trend="12.4" color="#4f8cff" />
-        <KpiCard label="订单总数" :value="'12,480'" unit="单" :trend="8.7" color="#00e5ff" />
-        <KpiCard label="活跃用户" :value="'45,230'" unit="人" :trend="-1.3" color="#36e8a8" />
-        <KpiCard label="转化率" :value="'24.8'" unit="%" :trend="3.5" color="#ffa940" />
-        <KpiCard label="平均客单" :value="'¥146'" :trend="5.2" color="#a26bff" />
-        <KpiCard label="退货率" :value="'2.4'" unit="%" :trend="-0.8" color="#ff5470" />
+        <KpiCard
+          v-for="item in kpiItems"
+          :key="item.name"
+          :label="item.name"
+          :value="item.displayValue"
+          :unit="item.unit"
+          :trend="item.trend"
+          :color="item.color"
+        />
       </section>
 
       <!-- 图表网格 -->

@@ -10,5 +10,7 @@ export type {
 } from './core/types';
 
 export { default as BigScreenContainer } from './components/BigScreenContainer.vue';
+export { vScale } from './directives/scale';
+export type { ScaleDirectiveHandler, ScaleDirectiveInfo } from './directives/scale';
 export { createBigScreen } from './plugin';
 export type { BigScreenPluginOptions } from './plugin';

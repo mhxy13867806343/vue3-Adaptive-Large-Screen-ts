@@ -1,6 +1,6 @@
 {
   "name": "@hooksvue/big-screen",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A lightweight Vue 3 big-screen adaptation library — global plugin + container component dual-mode.",
   "type": "module",
   "files": [
@@ -26,6 +26,7 @@
     "dev": "vite --config playground/vite.config.ts",
     "build:watch": "vite build --watch",
     "build": "vite build && cpy src/styles/index.css dist --rename=style.css --flat && cpy src/styles/css-only.css dist --flat",
+    "build:playground": "vite build --config playground/vite.config.ts",
     "type-check": "vue-tsc --noEmit"
   },
   "keywords": [

@@ -103,6 +103,36 @@ r.resize();
 r.destroy();
 ```
 
+#### A4. `v-scale` 指令 —— 图表元素监听缩放
+
+`createBigScreen()` 会默认注册全局指令；按需使用时也可以手动注册：
+
+```ts
+import { vScale } from '@hooksvue/big-screen';
+
+createApp(App).directive('scale', vScale).mount('#app');
+```
+
+```vue
+<template>
+  <!-- 使用方法一：例如 echarts 容器，自动写入 CSS 变量并派发 adapt-scale 事件 -->
+  <div ref="echartsRef" style="width: 500px;height: 400px;" v-scale />
+
+  <!-- 使用方法二：传入监听函数 -->
+  <div ref="echartsRef" style="width: 500px;height: 400px;" v-scale="handlerAdaptScale" />
+</template>
+
+<script>
+export default {
+  methods: {
+    handlerAdaptScale(el, scale) {
+      // do sth...
+    },
+  },
+};
+</script>
+```
+
 ---
 
 ### 方式 B：纯 CSS 模式（0 JS）
@@ -168,6 +198,16 @@ import '@hooksvue/big-screen/css-only.css';
 | `mode` | `ScaleMode` | `'fit'` | 缩放模式 |
 | `delay` | `number` | `80` | 防抖 ms |
 | `registerComponent` | `boolean` | `true` | 是否同时全局注册 `<BigScreenContainer />` |
+| `registerDirective` | `boolean` | `true` | 是否同时全局注册 `v-scale` |
+
+### `v-scale` 指令
+
+| 用法 | 说明 |
+|------|------|
+| `v-scale` | 监听元素有效缩放，写入 `--hbs-adapt-scale` / `--hbs-adapt-scale-x` / `--hbs-adapt-scale-y` |
+| `v-scale="handler"` | 缩放变化时调用 `handler(el, scale, info)` |
+
+`info` 类型为 `{ scaleX: number; scaleY: number; scale: number }`，并会同步派发 `adapt-scale` 自定义事件。
 
 ### `ScreenResizer` 类
 
@@ -219,9 +259,9 @@ new ScreenResizer({
 
 不使用 `translate(-50%,-50%) scale()` 这种和 scale 复合误差大的写法（autofit 弹窗/地图偏移的根源）。本库用 `transformOrigin: '0 0'` + `translate(tx, ty)` 显式计算偏移，未来做弹窗/地图修正时坐标可被精确反推。
 
-### 3. echarts 等图表 tooltip 偏移
+### 3. echarts 等图表缩放监听
 
-JS 模式下 `transform: scale()` 容器内的 echarts，鼠标 tooltip 会偏移 —— 这是已知问题，**v0.3 计划修复**（反向 `1/scale` 修正）。
+JS 模式下 `transform: scale()` 容器内的图表如果需要感知缩放，可在图表根节点上使用 `v-scale`，通过 CSS 变量、`adapt-scale` 事件或 `handler(el, scale, info)` 做自定义适配。
 
 ---
 

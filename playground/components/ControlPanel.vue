@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import type { ScaleInfo, ScaleMode } from '../../src/core/types';
 
-defineProps<{
+type ActiveTech = 'js' | 'css' | 'scale' | 'data';
+
+const props = defineProps<{
   /** 实现技术js=ScreenResizer／css=纯 CSS */
   technique: 'js' | 'css';
   /** 当前模式（容器/全局） */
@@ -35,6 +37,15 @@ const emit = defineEmits<{
 }>();
 
 const collapsed = ref(false);
+const activeTech = ref<ActiveTech>(props.technique);
+const scaleDemo = ref({ scale: 1, scaleX: 1, scaleY: 1, width: 0, height: 0 });
+
+watch(
+  () => props.technique,
+  (technique) => {
+    activeTech.value = technique;
+  },
+);
 
 const PRESETS: Array<{ label: string; w: number; h: number }> = [
   { label: '1920 × 1080', w: 1920, h: 1080 },
@@ -54,6 +65,24 @@ const SCALE_MODES: Array<{ value: ScaleMode; label: string; desc: string }> = [
 function applyPreset(p: { w: number; h: number }) {
   emit('update:width', p.w);
   emit('update:height', p.h);
+}
+
+function selectTech(tech: ActiveTech) {
+  activeTech.value = tech;
+  if (tech === 'js' || tech === 'css') {
+    emit('update:technique', tech);
+  }
+}
+
+function handlerAdaptScale(el: HTMLElement, scale: number, info: { scaleX: number; scaleY: number }) {
+  const rect = el.getBoundingClientRect();
+  scaleDemo.value = {
+    scale,
+    scaleX: info.scaleX,
+    scaleY: info.scaleY,
+    width: Math.round(rect.width),
+    height: Math.round(rect.height),
+  };
 }
 </script>
 
@@ -75,22 +104,104 @@ function applyPreset(p: { w: number; h: number }) {
         <div class="sec-title">实现技术</div>
         <div class="tech-tabs">
           <button
-            :class="['tech-tab', { on: technique === 'js' }]"
-            @click="emit('update:technique', 'js')"
+            :class="['tech-tab', { on: activeTech === 'js' }]"
+            @click="selectTech('js')"
           >
             <b>JS 计算</b>
             <small>ScreenResizer 动态控制</small>
           </button>
           <button
-            :class="['tech-tab', { on: technique === 'css' }]"
-            @click="emit('update:technique', 'css')"
+            :class="['tech-tab', { on: activeTech === 'css' }]"
+            @click="selectTech('css')"
           >
             <b>纯 CSS</b>
             <small>0 JS / tan(atan2)</small>
           </button>
+          <button
+            :class="['tech-tab', 'tech-scale', { on: activeTech === 'scale' }]"
+            @click="selectTech('scale')"
+          >
+            <b>v-scale 指令</b>
+            <small>echarts 元素缩放监听</small>
+          </button>
+          <button
+            :class="['tech-tab', 'tech-data', { on: activeTech === 'data' }]"
+            @click="selectTech('data')"
+          >
+            <b>Props 数据</b>
+            <small>:data=[{ name, value, format? }]</small>
+          </button>
         </div>
       </section>
 
+      <template v-if="activeTech === 'scale'">
+        <section class="sec scale-guide">
+          <div class="sec-title">指令用法</div>
+          <div class="live-scale-demo">
+            <div class="live-demo-title">
+              <b>实时 Demo</b>
+              <span>scale {{ scaleDemo.scale.toFixed(3) }}</span>
+            </div>
+            <div class="scale-demo-viewport">
+              <div
+                ref="echartsRef"
+                class="scale-demo-box"
+                style="width: 500px;height: 400px;"
+                v-scale="handlerAdaptScale"
+              >
+                <b>echartsRef</b>
+                <small>500 × 400 · v-scale</small>
+              </div>
+            </div>
+            <div class="scale-demo-kv">
+              <span>scaleX: {{ scaleDemo.scaleX.toFixed(3) }}</span>
+              <span>scaleY: {{ scaleDemo.scaleY.toFixed(3) }}</span>
+              <span>rect: {{ scaleDemo.width }} × {{ scaleDemo.height }}</span>
+            </div>
+          </div>
+          <div class="usage-card">
+            <b>使用方法一</b>
+            <small>例如 echarts 元素，只监听并写入缩放信息</small>
+            <pre class="mini-code"><code>&lt;div
+  ref="echartsRef"
+  style="width: 500px;height: 400px;"
+  v-scale
+&gt;&lt;/div&gt;</code></pre>
+          </div>
+          <div class="usage-card">
+            <b>使用方法二</b>
+            <small>传入监听函数，缩放后回调 el 和 scale</small>
+            <pre class="mini-code"><code>&lt;div
+  ref="echartsRef"
+  style="width: 500px;height: 400px;"
+  v-scale="handlerAdaptScale"
+&gt;&lt;/div&gt;
+
+methods: {
+  handlerAdaptScale(el, scale) {
+    // do sth...
+  },
+}</code></pre>
+          </div>
+        </section>
+      </template>
+
+      <template v-else-if="activeTech === 'data'">
+        <section class="sec data-guide">
+          <div class="sec-title">数据入参</div>
+          <div class="data-summary">
+            <b>:data=[]</b>
+            <small>用于驱动 KPI/指标类展示数据</small>
+          </div>
+          <div class="schema-list">
+            <div><span>name</span><b>必传</b><em>指标名称</em></div>
+            <div><span>value</span><b>必传</b><em>指标数值</em></div>
+            <div><span>format</span><b>可选</b><em>展示前格式化函数</em></div>
+          </div>
+        </section>
+      </template>
+
+      <template v-else>
       <!-- 模式切换 -->
       <section class="sec">
         <div class="sec-title">运行模式</div>
@@ -245,11 +356,12 @@ function applyPreset(p: { w: number; h: number }) {
           <small>恢复默认参数</small>
         </button>
       </section>
+      </template>
 
       <!-- API 速查 -->
       <section class="sec">
         <div class="sec-title">API 速查</div>
-        <pre v-if="technique === 'js'" class="code"><code>// 容器组件
+        <pre v-if="activeTech === 'js'" class="code"><code>// 容器组件
 &lt;BigScreenContainer
   :width="1920" :height="1080"
   mode="fit" :delay="80"
@@ -272,8 +384,16 @@ const r = new ScreenResizer({
 r.start()
 r.update({ mode: 'stretch' })
 r.resize()
-r.destroy()</code></pre>
-        <pre v-else class="code"><code>// 1) 引入纯 CSS
+r.destroy()
+
+// 图表元素适配缩放
+&lt;div ref="echartsRef" v-scale&gt;&lt;/div&gt;
+&lt;div ref="echartsRef" v-scale="handlerAdaptScale"&gt;&lt;/div&gt;
+
+function handlerAdaptScale(el, scale) {
+  // do sth...
+}</code></pre>
+        <pre v-else-if="activeTech === 'css'" class="code"><code>// 1) 引入纯 CSS
 import '@hooksvue/big-screen/css-only.css'
 
 &lt;!-- 2) 全局模式（vw/vh） --&gt;
@@ -298,6 +418,37 @@ import '@hooksvue/big-screen/css-only.css'
 // 要求: Chrome 111+/Safari 15.4+
 //        Firefox 108+
 // 原理: tan(atan2(L,L)) → 无单位比值</code></pre>
+        <pre v-else-if="activeTech === 'scale'" class="code"><code>// 使用方法一，例如 echarts 元素
+&lt;div ref="echartsRef"
+     style="width: 500px;height: 400px;"
+     v-scale&gt;&lt;/div&gt;
+
+// 使用方法二，传入监听函数
+&lt;div ref="echartsRef"
+     style="width: 500px;height: 400px;"
+     v-scale="handlerAdaptScale"&gt;&lt;/div&gt;
+
+methods: {
+  handlerAdaptScale(el, scale) {
+    // do sth...
+  },
+}</code></pre>
+        <pre v-else class="code"><code>&lt;Dashboard :data="data" /&gt;
+
+const data = [
+  {
+    name: '今日销售额',
+    value: 1820400,
+    format: (v) =&gt; Number(v).toLocaleString(),
+  },
+  {
+    name: '订单总数',
+    value: 12480,
+  },
+]
+
+// name、value 必传
+// format 可选，用于展示前格式化 value</code></pre>
       </section>
     </div>
   </aside>
@@ -546,6 +697,177 @@ import '@hooksvue/big-screen/css-only.css'
 }
 .tech-tab.on b { color: #fff; }
 .tech-tab.on small { color: rgba(255, 255, 255, 0.85); }
+.tech-scale {
+  background: rgba(255, 169, 64, 0.08);
+  border-color: rgba(255, 169, 64, 0.22);
+}
+.tech-scale b { color: #ffa940; }
+.tech-scale:hover { background: rgba(255, 169, 64, 0.12); }
+.tech-scale.on {
+  background: linear-gradient(135deg, #ffa940 0%, #ff5470 100%);
+  border-color: #ffa940;
+  box-shadow: 0 0 12px rgba(255, 169, 64, 0.35);
+}
+.tech-scale.on b { color: #fff; }
+.tech-data {
+  background: rgba(54, 232, 168, 0.08);
+  border-color: rgba(54, 232, 168, 0.22);
+}
+.tech-data b { color: #36e8a8; }
+.tech-data:hover { background: rgba(54, 232, 168, 0.1); }
+.tech-data.on {
+  background: linear-gradient(135deg, #20d895 0%, #00e5ff 100%);
+  border-color: #36e8a8;
+  box-shadow: 0 0 12px rgba(54, 232, 168, 0.35);
+}
+.tech-data.on b { color: #fff; }
+
+.scale-guide {
+  background: rgba(255, 169, 64, 0.06);
+  border: 1px solid rgba(255, 169, 64, 0.18);
+  border-radius: 4px;
+  padding: 14px;
+}
+.live-scale-demo {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.24);
+  border: 1px solid rgba(255, 169, 64, 0.18);
+  border-radius: 4px;
+}
+.live-demo-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.live-demo-title b {
+  color: #ffa940;
+  font-size: 13px;
+}
+.live-demo-title span {
+  color: #ffd59b;
+  font-family: monospace;
+  font-size: 12px;
+}
+.scale-demo-viewport {
+  height: 208px;
+  overflow: hidden;
+  border: 1px dashed rgba(255, 169, 64, 0.26);
+  border-radius: 4px;
+  background: rgba(255, 169, 64, 0.05);
+}
+.scale-demo-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transform: scale(0.5);
+  transform-origin: 0 0;
+  background:
+    linear-gradient(135deg, rgba(255, 169, 64, 0.36), rgba(255, 84, 112, 0.18)),
+    rgba(255, 255, 255, 0.04);
+  border: 2px solid rgba(255, 213, 155, 0.7);
+  color: #fff;
+  font-family: monospace;
+}
+.scale-demo-box b {
+  font-size: 28px;
+}
+.scale-demo-box small {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 16px;
+}
+.scale-demo-kv {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  margin-top: 8px;
+  color: rgba(230, 240, 255, 0.58);
+  font-family: monospace;
+  font-size: 11px;
+}
+.usage-card {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.24);
+  border: 1px solid rgba(255, 169, 64, 0.14);
+  border-radius: 4px;
+}
+.usage-card b {
+  display: block;
+  color: #ffa940;
+  font-size: 13px;
+  margin-bottom: 3px;
+}
+.usage-card small {
+  color: rgba(230, 240, 255, 0.5);
+  font-size: 11px;
+}
+.mini-code {
+  margin: 8px 0 0;
+  padding: 8px;
+  overflow-x: auto;
+  background: rgba(0, 0, 0, 0.36);
+  border-radius: 3px;
+  color: #ffd59b;
+  font-family: monospace;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.data-guide {
+  background: rgba(54, 232, 168, 0.06);
+  border: 1px solid rgba(54, 232, 168, 0.18);
+  border-radius: 4px;
+  padding: 14px;
+}
+.data-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.data-summary b {
+  color: #36e8a8;
+  font-family: monospace;
+  font-size: 16px;
+}
+.data-summary small {
+  color: rgba(230, 240, 255, 0.5);
+  font-size: 11px;
+}
+.schema-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.schema-list > div {
+  display: grid;
+  grid-template-columns: 58px 42px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(54, 232, 168, 0.12);
+  border-radius: 4px;
+}
+.schema-list span {
+  color: #e6f0ff;
+  font-family: monospace;
+  font-weight: 600;
+}
+.schema-list b {
+  color: #36e8a8;
+  font-size: 11px;
+  font-weight: 600;
+}
+.schema-list em {
+  color: rgba(230, 240, 255, 0.52);
+  font-size: 11px;
+  font-style: normal;
+}
 
 .tip {
   margin: 10px 0 0;

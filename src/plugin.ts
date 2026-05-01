@@ -2,6 +2,7 @@ import type { App, Plugin } from 'vue';
 import BigScreenContainer from './components/BigScreenContainer.vue';
 import { ScreenResizer } from './core/ScreenResizer';
 import type { ScaleMode, ScreenResizerOptions } from './core/types';
+import { vScale } from './directives/scale';
 
 export interface BigScreenPluginOptions {
   /** 接管的根选择器，默认 '#app' */
@@ -18,6 +19,10 @@ export interface BigScreenPluginOptions {
    * 是否注册全局组件 <BigScreenContainer />，默认 true
    */
   registerComponent?: boolean;
+  /**
+   * 是否注册全局指令 v-scale，默认 true
+   */
+  registerDirective?: boolean;
 }
 
 const PLUGIN_KEY = '__hooksvue_big_screen_resizer__';
@@ -32,6 +37,9 @@ export function createBigScreen(options: BigScreenPluginOptions = {}): Plugin {
     install(app: App) {
       if (options.registerComponent !== false) {
         app.component('BigScreenContainer', BigScreenContainer);
+      }
+      if (options.registerDirective !== false) {
+        app.directive('scale', vScale);
       }
 
       // 仅在浏览器环境启动全局接管逻辑
